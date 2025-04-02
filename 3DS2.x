@@ -14,11 +14,12 @@ Some of the data points used by ACS for risk based authentication;
 2. Card network "Directory Server" maintains the list of all <b><i>Method URLs</i></b> per issuer / ACS - BINs
 
   ```mermaid
-  sequenceDiagarm
+  sequenceDiagram
   3DS Server->>Directory Server: Preparation Request (PREQ) to Director Server to collect issuer card ranges / ACS info
   Directory Server-->>3DS Server: Preparation Response (PRES) all info with Method URLs that 3DS server caches
+  3DS Server ->> 3DS Client: At start of every transaction, 3DS Client receives the Method URL
+  3DS Client ->> Directory Server: The JS at the Method URL is executed on the client browser to collect browser / device info
   ```
-4. 3DS Server (generally, merchant payment gateways) sends Preparation Request (PREQ) to Director Server to collect issuer card ranges / ACS info
 
 ##### Past Transaction Behaviour
 ##### Transaction Amount
