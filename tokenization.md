@@ -42,3 +42,90 @@ With advent of new payment channels, and enter / store card # features, card # i
 3. Token Issuance - is the process of generating all associated data for a token like the personalization data, including keys (say EMV data) - TSP does this
 4. Token Provisioning - is the process of delivering token and associated data to the token location. i.e.; MPA .
 
+# Token Issuance
+## 3 Major Steps
+### Card Availability - BIN Availability Checks
+TSP checks if card BIN is eligible for tokenization
+### Card Eligibility - Card Authentication
+TSP works with issuer to authenticate card
+### Step-up Process - Customer Authentication via OTP / call
+
+## Flow
+```mermaid
+  sequenceDiagram
+    autonumber
+    box Orange Token Requester
+    participant A as MPA
+    participant B as Wallet Server
+    end
+    participant C as TSP
+    participant D as Issuer
+
+    A ->> B: Card holder enters the card details in MPA, <br/>and the details are sent to a wallet server
+    B ->> C: TSP verifies if PAN BIN is eligible for tokenization
+    C <<->> D: TSP sends the card details to issuer for authentication. <br/>Also, TSP and issuer work to authenticate the card holder (ID&V)
+    D ->> A: Step-up process (ID&V), additional authentication <br/>is performed to ensure that the card holder is authenticated
+    C -->> B: Upon successful authentication, TSP generates token, token <br/>profile (EMV data), and sends it to the TR
+    B -->> A: Token provisioning
+  
+```
+Steps 1-4 - Token Assurance
+
+## Important ISO8583 Messages (MA -> Issuer)
+### Card Eligibility
+Token Eligibility Request - 0100 message followed by Token Authorization Request - 0100 message
+
+### Step-up Process
+1. Activation Code Notification - 0100 - TSP send to issuer to further send it to card holder's mobile
+2. Tokenization Completion Notification -0620 OR Tokenization Event Notification - 0620
+
+## Transaction Processing
+### EMV Chip Card Present Txn Flow
+```mermaid
+  sequenceDiagram
+    autonumber
+    participant A as POS
+    participant B as Acquirer
+    participant C as Scheme
+    participant D as Issuer
+
+    A ->> B: POS sends Authorization Request
+    B ->> C: -   
+    C ->> D: -   
+    D ->> D: Checks (Cryptogram checks, A/C status checks, <br/>Card Status checks, Open to Buy check)
+    D -->> C: -
+    C -->> B: -
+    B -->> A: - 
+```
+Notes;
+1. Issuer maintains KMS and HSM
+2. Stores EMV card profile data
+3. Validates it at the time of authorization
+
+### NFC Tap & Pay Txn Flow (With Tokenization)
+```mermaid
+    sequenceDiagram
+      autonumber
+      participant A as MPA
+      participant B as POS
+      participant C as Acquirer
+      participant D as Scheme (TSP)
+      participant E as Issuer
+
+      A->>B: Card holder taps txn at POS using mobile, <br/> any other NFC based device
+      B->>C: POS sends the txn to TSP via Acquirer
+      C->>D: TSP identifies that the txn is token based <br/> and does the cryptogram validation.<br/>Convers the token to PAN and <br/> sends the validation results to issuer
+      D->>E: -
+      E->>E: Issuer does rest of the checks <br/>open to buy, card/account status, etc
+      E-->>D: -
+      D-->>C: Converts back PAN to token and sends to POS via Acquirer
+      C-->>B: -
+      B->>A: -       
+      
+```
+Notes;
+1. No impact on acquirer
+2. TSP does the heavy lifting
+3. Issuer has reduced responsibility
+   
+
